@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
+import os, sys
 import shutil
 import datetime
 
@@ -40,7 +40,11 @@ for dirpath, dirnames, filenames in ptree:
         fullsrcpath = os.path.join(dirpath, file)
         fulldstpath = os.path.join(dstpath, file)
         path_collection.append(fullsrcpath)
-        shutil.copy2(fullsrcpath, fulldstpath)
+        try:
+            shutil.copy2(fullsrcpath, fulldstpath)
+        except os.error:
+            print('skipping', fullsrcpath, sys.exc_info()[0])
+
     
     
     
