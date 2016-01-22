@@ -5,25 +5,29 @@ import datetime
 
 path_collection = []
 backup_type = 'incremental'
-raw_sourcefolder = r'D:\distr\zwc\ecl'
-raw_dstfolder = r'D:\PY\backup'
+backup_from = 'D:\\PY\\tb'
+backup_to = 'D:\\PY\\backup'
 now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S_full')
-dstfolder = os.path.join(raw_dstfolder, now_time)
+dstfolder = os.path.join(backup_to, now_time)
 os.mkdir(dstfolder)
 print(now_time)
-ptree = os.walk(raw_sourcefolder)
-item_in_path_to_backup = len(raw_sourcefolder.split('\\'))
+ptree = os.walk(backup_from)
+item_in_path_to_backup = len(backup_from.split('\\'))
 ii=0
 for dirpath, dirnames, filenames in ptree:
     ii=ii+1
     print(ii)
-    print(dirnames)    
+    print('Where we are now(dirpath) - ',dirpath)
+    print('Directories in current point(dirnames) - ',dirnames)
+    print('Files in current point(filenames) - ',filenames)    
     src_list_path = dirpath.split('\\')[item_in_path_to_backup:]
+    print('Folder in dirpath to be added to dstpath at this step - ',src_list_path)
+    print('----------------------------------------------')
     dstpath=dstfolder
-    print("DIRPATH (где находимся)- "+dirpath)
+    #print("DIRPATH (где находимся)- "+dirpath)
     for folders in src_list_path:
         dstpath = dstpath+'\\'+folders 
-    print("Куда будем копировать - "+dstpath)
+    #print("Куда будем копировать - "+dstpath)
   
 #Делаем директории
     for dirs in dirnames:
