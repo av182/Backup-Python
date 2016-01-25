@@ -50,8 +50,8 @@ for dirpath, dirnames, filenames in ptree:
         path_collection.append(fullsrcpath)
         try:
             shutil.copy2(fullsrcpath, fulldstpath)
-        except os.error:
-            print('skipping', fullsrcpath, sys.exc_info()[0])
+        except IOError as e:
+            print('skipping', fullsrcpath, e.errno, e.strerror)
             continue
         try:
             compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=False)
@@ -62,7 +62,7 @@ for dirpath, dirnames, filenames in ptree:
                 #print('Source and destination files are DIFFERENT')
                 files_different = files_different+1
         except os.error:
-            print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', sys.exc_info()[0])
+            print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
    
 print(path_collection)
 print('Files copied - ', len(path_collection))

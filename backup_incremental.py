@@ -4,13 +4,13 @@ import shutil
 import datetime
 
 path_collection = []
-backup_type = 'incremental'
-raw_sourcefolder = r'D:\distr\zwc\ecl'
-raw_dstfolder = r'D:\PY\backup'
+backup_type = 'differential'
+backup_from = r'D:\distr\zwc\ecl'
+backup_to = r'D:\PY\backup'
 
 #finding out the previous full_backup folder in the backup directory
 def find_prev_full_backup_folder():
-    prev_backup_tree = os.listdir(path=raw_dstfolder)
+    prev_backup_tree = os.listdir(path=backup_to)
     full_backup_tree = []
     for dirs in prev_backup_tree:
         if dirs.find('-full') != -1:
@@ -21,17 +21,17 @@ def find_prev_full_backup_folder():
 
 #finding out previous full backup path
 last_full_backup_folder = find_prev_full_backup_folder()
-path_prev_full_backup = os.path.join(raw_dstfolder, last_full_backup_folder)
+path_prev_full_backup = os.path.join(backup_to, last_full_backup_folder)
 print("Path to previous full backup --> ",path_prev_full_backup)
 
 #make backup destination folder
-now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S-increm')
-dstfolder = os.path.join(raw_dstfolder, now_time)
+now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S-differ')
+dstfolder = os.path.join(backup_to, now_time)
 #os.mkdir(dstfolder)
 
 #scaning source folder (script main operation)
-item_in_path_to_backup = len(raw_sourcefolder.split('\\'))
-ptree = os.walk(raw_sourcefolder)
+item_in_path_to_backup = len(backup_from.split('\\'))
+ptree = os.walk(backup_from)
 ii=0
 for dirpath, dirnames, filenames in ptree:
     ii=ii+1
@@ -49,30 +49,5 @@ for dirpath, dirnames, filenames in ptree:
             current_backup = current_backup +'\\'+folders
         print("Где полный бэкап текущий - "+prev_full_current)
         print("Текущий путь текущего бэкапа - "+current_backup)
-    
-    
-    
-    
-"""  
-#Делаем директории
-    for dirs in dirnames:
-        dircheck = os.path.join(dstpath, dirs)
-        if not os.path.exists(dircheck):
-            os.makedirs(dircheck)
-        else:
-            if not os.path.isdir(dircheck):
-                os.remove(dircheck)
-                os.makedirs(dircheck)
-                print("Not a folder detected!")
-#Копируем файлы
-    for file in filenames:
-        fullsrcpath = os.path.join(dirpath, file)
-        fulldstpath = os.path.join(dstpath, file)
-        time_src = os.path.getmtime(fullsrcpath)
-        #time_dst = os.path.getmtime(fulldstpath)
-        #print(os.path.getmtime(fullsrcpath))
-        path_collection.append(fullsrcpath)
-        shutil.copy2(fullsrcpath, fulldstpath)"""
-    
     
     
