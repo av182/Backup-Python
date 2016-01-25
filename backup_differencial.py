@@ -5,15 +5,15 @@ import datetime
 
 path_collection = []
 backup_type = 'differential'
-backup_from = r'D:\distr\zwc\ecl'
-backup_to = r'D:\PY\backup'
+backup_from = 'D:\\distr\\zwc\\ecl'
+backup_to = 'D:\\PY\\backup'
 
 #finding out the previous full_backup folder in the backup directory
 def find_prev_full_backup_folder():
     prev_backup_tree = os.listdir(path=backup_to)
     full_backup_tree = []
     for dirs in prev_backup_tree:
-        if dirs.find('-full') != -1:
+        if dirs.find('_full') != -1:
             full_backup_tree.append(dirs) 
     prev_full_backup = max(full_backup_tree)
     print(full_backup_tree)
@@ -27,7 +27,7 @@ print("Path to previous full backup --> ",path_prev_full_backup)
 #make backup destination folder
 now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S-differ')
 dstfolder = os.path.join(backup_to, now_time)
-#os.mkdir(dstfolder)
+os.mkdir(dstfolder)
 
 #scaning source folder (script main operation)
 item_in_path_to_backup = len(backup_from.split('\\'))

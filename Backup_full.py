@@ -61,7 +61,7 @@ for dirpath, dirnames, filenames in ptree:
             else:
                 #print('Source and destination files are DIFFERENT')
                 files_different = files_different+1
-        except os.error:
+        except IOError as e:
             print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
    
 print(path_collection)
