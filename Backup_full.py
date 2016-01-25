@@ -2,11 +2,12 @@
 import os, sys
 import shutil
 import datetime
+import filecmp
 
 path_collection = []
 backup_type = 'incremental'
-backup_from = 'D:\\PY\\tb'
-backup_to = 'D:\\PY\\backup'
+backup_from = r'D:\PY\tb'
+backup_to = r'D:\PY\backup'
 now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S_full')
 dstfolder = os.path.join(backup_to, now_time)
 os.mkdir(dstfolder)
@@ -14,6 +15,8 @@ print(now_time)
 ptree = os.walk(backup_from)
 item_in_path_to_backup = len(backup_from.split('\\'))
 ii=0
+files_identical = 0
+files_different = 0
 for dirpath, dirnames, filenames in ptree:
     ii=ii+1
     print(ii)
@@ -22,14 +25,14 @@ for dirpath, dirnames, filenames in ptree:
     print('Files in current point(filenames) - ',filenames)    
     src_list_path = dirpath.split('\\')[item_in_path_to_backup:]
     print('Folder in dirpath to be added to dstpath at this step - ',src_list_path)
-    print('----------------------------------------------')
     dstpath=dstfolder
-    #print("DIRPATH (где находимся)- "+dirpath)
     for folders in src_list_path:
-        dstpath = dstpath+'\\'+folders 
-    #print("Куда будем копировать - "+dstpath)
+        dstpath = os.path.join(dstpath, folders)   
+        #dstpath = dstpath+'\\'+folders 
+    print("Where we are gonna copy - "+dstpath)
+    print('----------------------------------------------')
   
-#Делаем директории
+#Making directories
     for dirs in dirnames:
         dircheck = os.path.join(dstpath, dirs)
         if not os.path.exists(dircheck):
@@ -39,7 +42,8 @@ for dirpath, dirnames, filenames in ptree:
                 os.remove(dircheck)
                 os.makedirs(dircheck)
                 print("Not a folder detected!")
-#Копируем файлы
+
+#Copying files
     for file in filenames:
         fullsrcpath = os.path.join(dirpath, file)
         fulldstpath = os.path.join(dstpath, file)
@@ -48,7 +52,20 @@ for dirpath, dirnames, filenames in ptree:
             shutil.copy2(fullsrcpath, fulldstpath)
         except os.error:
             print('skipping', fullsrcpath, sys.exc_info()[0])
-
-    
-    
+            continue
+        try:
+            compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=False)
+            if compare_result:
+                #print('Source and destination files are identical')
+                files_identical = files_identical+1
+            else:
+                #print('Source and destination files are DIFFERENT')
+                files_different = files_different+1
+        except os.error:
+            print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', sys.exc_info()[0])
+   
+print(path_collection)
+print('Files copied - ', len(path_collection))
+print('Files identical - ', files_identical)
+print('Files different - ', files_different)   
     
