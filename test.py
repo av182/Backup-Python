@@ -19,4 +19,5 @@ except os.error:
 
 print(os.path.getsize('D:/PY/win.txt'))
 print(os.path.getsize('D:/PY/backup/25012016-111908_full/Folder1/Папка3/win.txt'))
-print(os.error)
+print(os.path.getmtime('D:/PY/win.txt'))
+print(os.path.getmtime('D:/PY/backup/25012016-111908_full/Folder1/Папка3/win.txt'))
