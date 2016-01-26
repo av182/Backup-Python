@@ -5,7 +5,6 @@ import datetime
 import filecmp
 
 path_collection = []
-backup_type = 'incremental'
 backup_from = r'D:\PY\tb'
 backup_to = r'D:\PY\backup'
 now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S_full')
@@ -22,7 +21,7 @@ for dirpath, dirnames, filenames in ptree:
     print(ii)
     print('Where we are now(dirpath) - ',dirpath)
     print('Directories in current point(dirnames) - ',dirnames)
-    print('Files in current point(filenames) - ',filenames)    
+    #print('Files in current point(filenames) - ',filenames)    
     src_list_path = dirpath.split('\\')[item_in_path_to_backup:]
     print('Folder in dirpath to be added to dstpath at this step - ',src_list_path)
     dstpath=dstfolder
@@ -44,9 +43,9 @@ for dirpath, dirnames, filenames in ptree:
                 print("Not a folder detected!")
 
 #Copying files
-    for file in filenames:
-        fullsrcpath = os.path.join(dirpath, file)
-        fulldstpath = os.path.join(dstpath, file)
+    for fl in filenames:
+        fullsrcpath = os.path.join(dirpath, fl)
+        fulldstpath = os.path.join(dstpath, fl)
         path_collection.append(fullsrcpath)
         try:
             shutil.copy2(fullsrcpath, fulldstpath)
@@ -64,7 +63,7 @@ for dirpath, dirnames, filenames in ptree:
         except IOError as e:
             print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
    
-print(path_collection)
+#print(path_collection)
 print('Files copied - ', len(path_collection))
 print('Files identical - ', files_identical)
 print('Files different - ', files_different)   

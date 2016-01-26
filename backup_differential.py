@@ -6,6 +6,7 @@ import filecmp
 
 path_collection = []
 backup_from = 'D:\\PY\\tb'
+#backup_from = r'D:\Eclipse\features'
 backup_to = 'D:\\PY\\backup'
 files_identical = 0
 files_different = 0
@@ -41,6 +42,21 @@ def compare(fs, fd):
             files_different = files_different + 1
     except IOError as e:
         print('Comparsion ',fs, ' and ', fd, ' failed!', e.errno, e.strerror)
+
+def del_empty_folders(folder_to_clean, Second_step = True):
+    if os.path.isdir(folder_to_clean):
+        if len(os.listdir(folder_to_clean)) > 0:
+            for drs in os.listdir(folder_to_clean):
+                drs_path = os.path.join(folder_to_clean,drs)
+                if os.path.isdir(drs_path):
+                    if len(os.listdir(drs_path)) == 0:
+                        try:
+                            os.rmdir(drs_path)
+                        except OSError as e:
+                            print('Failed to delete: ',drs_path,'.  Error - ', e.errno, e.strerror)
+                    else: del_empty_folders(drs_path)
+            if Second_step: del_empty_folders(folder_to_clean, False)
+        #else: os.rmdir(folder_to_clean) # uncomment, if you need to delete root diff backup folder
 
 #finding out previous full backup path
 last_full_backup_folder = find_prev_full_backup_folder()
@@ -84,26 +100,28 @@ for dirpath, dirnames, filenames in ptree:
                 print("Not a folder detected!")
 
     #Copying files
-    for file in filenames:
-        fullsrcpath = os.path.join(dirpath, file)
-        fulldstpath = os.path.join(dstpath, file)
-        fullprevpath = os.path.join(full_current_point, file)
-        path_collection.append(fullsrcpath)
+    for fl in filenames:
+        fullsrcpath = os.path.join(dirpath, fl)
+        fulldstpath = os.path.join(dstpath, fl)
+        fullprevpath = os.path.join(full_current_point, fl)
         if (not os.path.exists(fullprevpath)) or \
            (os.path.getsize(fullsrcpath) != os.path.getsize(fullprevpath)) or \
            (os.path.getmtime(fullsrcpath) != os.path.getmtime(fullprevpath)):
             try:
                 shutil.copy2(fullsrcpath, fulldstpath)
+                path_collection.append(fullsrcpath)
                 compare(fullsrcpath, fulldstpath)
-                print('File copied and checked.')
+                print('fl copied and checked.')
             except IOError as e:
                 print('skipping', fullsrcpath, e.errno, e.strerror)
                 continue
         else:
             #if os.path.getsize(fullsrcpath) == os.path.getsize(fullprevpath):
-            print('File exist in full backup. Skiping...')
+            print('fl exist in full backup. Skiping...')
 
 print('Files copied - ', len(path_collection))
 print('Files identical - ', files_identical)
 print('Files different - ', files_different)   
+print(path_collection)
 
+del_empty_folders(dstfolder)
