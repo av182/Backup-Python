@@ -3,6 +3,9 @@ import os, sys
 import shutil
 import datetime
 import filecmp
+import time
+
+start = time.time()
 
 if len(sys.argv) != 3:
     print('Not enough arguments!')
@@ -17,14 +20,22 @@ else:
 def source_count(pth):
     dirs_src = 0
     files_src = 0
+    total_size = 0
     ptree = os.walk(backup_from)
     for dirpath, dirnames, filenames in ptree:
         dirs_src = dirs_src + len(dirnames)
         files_src = files_src + len(filenames)
-    return dirs_src, files_src
+        for fl in filenames:
+            fullsrcpath = os.path.join(dirpath, fl)
+            total_size = total_size + os.path.getsize(fullsrcpath)
+    return dirs_src, files_src, total_size
 
-print('Dirs in the source before backup: ',source_count(backup_from)[0])
-print('Files in the source before backup: ',source_count(backup_from)[1])
+source_stat = source_count(backup_from)
+print('Dirs in the source before backup: ',source_stat[0])
+print('Files in the source before backup: ',source_stat[1])
+print('Total size before backup: ',source_stat[2],'bytes (', round(source_stat[2]/1024/1024, 2), ' Mb)')
+print('-----------------------------------------------------')
+print('Errors:')
 
 files_to_be_copied = []
 files_copied = []
@@ -43,7 +54,6 @@ for dirpath, dirnames, filenames in ptree:
     dstpath=dstfolder
     for folders in src_list_path:
         dstpath = os.path.join(dstpath, folders)   
-        #dstpath = dstpath+'\\'+folders 
     
 #Making directories
     for dirs in dirnames:
@@ -78,12 +88,17 @@ for dirpath, dirnames, filenames in ptree:
                 files_identical.append(fullsrcpath)
             else:
                 files_different.append(fulldstpath)
+                print('Difference in file - ', fullsrcpath)
         except IOError as e:
             print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
    
+print('-----------------------------------------------------')
 print('Files ready to be copied - ', len(files_to_be_copied))
 print('Files copied - ', len(files_copied))
-print('Files not copied - ', len(files_copy_error))
 print('Files identical - ', len(files_identical))
-print('Files different - ', len(files_different))   
-    
+print('Files not copied - ', len(files_copy_error))
+print('Files different - ', len(files_different)) 
+dst_stat = source_count(dstfolder)
+print('Total size after backup: ',dst_stat[2],'bytes (', round(dst_stat[2]/1024/1024, 2), ' Mb)')
+print('Size difference - ', source_stat[2]-dst_stat[2], 'bytes')
+print('Backup time - ', round(time.time()-start, 2), 'sec (', round((time.time()-start)/60, 2),'min)')   
