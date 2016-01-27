@@ -6,7 +6,6 @@ import filecmp
 
 path_collection = []
 backup_from = 'D:\\PY\\tb'
-#backup_from = r'D:\Eclipse\features'
 backup_to = 'D:\\PY\\backup'
 files_identical = 0
 files_different = 0
@@ -111,13 +110,13 @@ for dirpath, dirnames, filenames in ptree:
                 shutil.copy2(fullsrcpath, fulldstpath)
                 path_collection.append(fullsrcpath)
                 compare(fullsrcpath, fulldstpath)
-                print('fl copied and checked.')
+                print('file copied and checked.')
             except IOError as e:
                 print('skipping', fullsrcpath, e.errno, e.strerror)
                 continue
         else:
             #if os.path.getsize(fullsrcpath) == os.path.getsize(fullprevpath):
-            print('fl exist in full backup. Skiping...')
+            print('file exist in full backup. Skiping...')
 
 print('Files copied - ', len(path_collection))
 print('Files identical - ', files_identical)

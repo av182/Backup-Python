@@ -21,7 +21,7 @@ for dirpath, dirnames, filenames in ptree:
     print(ii)
     print('Where we are now(dirpath) - ',dirpath)
     print('Directories in current point(dirnames) - ',dirnames)
-    #print('Files in current point(filenames) - ',filenames)    
+    #print('Files in current point(filenames) - ',filenames)    #error if file not in ru_win encoding
     src_list_path = dirpath.split('\\')[item_in_path_to_backup:]
     print('Folder in dirpath to be added to dstpath at this step - ',src_list_path)
     dstpath=dstfolder
@@ -63,8 +63,15 @@ for dirpath, dirnames, filenames in ptree:
         except IOError as e:
             print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
    
-#print(path_collection)
+#print(path_collection) #error if file not in ru_win encoding
 print('Files copied - ', len(path_collection))
 print('Files identical - ', files_identical)
 print('Files different - ', files_different)   
     
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print('Usage: Backup_full sourse_dir target_dir')
+        sys.exit()
+    else:
+        backup_from = sys.argv[0]
+        backup_to = sys.argv[1]
