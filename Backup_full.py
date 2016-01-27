@@ -7,17 +7,32 @@ import time
 
 start = time.time()
 
-if len(sys.argv) != 3:
+if len(sys.argv) < 3:
     print('Not enough arguments!')
-    print('Usage: Backup_full.py sourse_dir target_dir')
+    print('Usage: Backup_full.py sourse_dir target_dir -n(optional)')
     #sys.exit()
+    no_compare = False
     backup_from = r'D:\PY\tb'
     backup_to = r'D:\PY\backup'
-else:
+elif len(sys.argv) == 3:
     backup_from = sys.argv[1]
     backup_to = sys.argv[2]
+    no_compare = False
+elif len(sys.argv) == 4:
+    if sys.argv[3] == '-n':
+        no_compare = True
+    else:
+        print("Bad argument. Need '-n' for non-comparsion backup")
+        sys.exit()
+    backup_from = sys.argv[1]
+    backup_to = sys.argv[2]
+else:
+    print('Too many arguments!')
+    print('Usage: Backup_full.py sourse_dir target_dir -n(optional)')
+    sys.exit()
 
 def source_count(pth):
+    print("Gathering statistics...")
     dirs_src = 0
     files_src = 0
     total_size = 0
@@ -31,11 +46,10 @@ def source_count(pth):
     return dirs_src, files_src, total_size
 
 source_stat = source_count(backup_from)
-print('Dirs in the source before backup: ',source_stat[0])
-print('Files in the source before backup: ',source_stat[1])
-print('Total size before backup: ',source_stat[2],'bytes (', round(source_stat[2]/1024/1024, 2), ' Mb)')
+print('   Dirs in the source before backup: ',source_stat[0])
+print('   Files in the source before backup: ',source_stat[1])
+print('   Total size before backup: ',source_stat[2],'bytes (', round(source_stat[2]/1024/1024, 2), ' Mb)')
 print('-----------------------------------------------------')
-print('Errors:')
 
 files_to_be_copied = []
 files_copied = []
@@ -78,27 +92,30 @@ for dirpath, dirnames, filenames in ptree:
             files_copy_error.append(fullsrcpath)
             #'file name is too long' exception handling
             if len(fulldstpath)>259:
-                print ('Skipping file: ', fulldstpath,' Destination path is to long -> ', len(fulldstpath))
+                print ('Skipping file: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
             else:
                 print('Skipping', fullsrcpath, e.errno, e.strerror)
             continue
-        try:
-            compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=False)
-            if compare_result:
-                files_identical.append(fullsrcpath)
-            else:
-                files_different.append(fulldstpath)
-                print('Difference in file - ', fullsrcpath)
-        except IOError as e:
-            print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
+        if not no_compare:
+            try:
+                compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=False)
+                if compare_result:
+                    files_identical.append(fullsrcpath)
+                else:
+                    files_different.append(fulldstpath)
+                    print('Difference in file - ', fullsrcpath)
+            except IOError as e:
+                print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
    
 print('-----------------------------------------------------')
 print('Files ready to be copied - ', len(files_to_be_copied))
 print('Files copied - ', len(files_copied))
-print('Files identical - ', len(files_identical))
-print('Files not copied - ', len(files_copy_error))
-print('Files different - ', len(files_different)) 
+print('Skipped files - ', len(files_copy_error))
+if not no_compare:
+    print('Comparsion results:')
+    print('   Files identical - ', len(files_identical))
+    print('   Files different - ', len(files_different)) 
 dst_stat = source_count(dstfolder)
-print('Total size after backup: ',dst_stat[2],'bytes (', round(dst_stat[2]/1024/1024, 2), ' Mb)')
-print('Size difference - ', source_stat[2]-dst_stat[2], 'bytes')
+print('   Total size after backup: ',dst_stat[2],'bytes (', round(dst_stat[2]/1024/1024, 2), ' Mb)')
+print('Size difference before and after backup- ', source_stat[2]-dst_stat[2], 'bytes')
 print('Backup time - ', round(time.time()-start, 2), 'sec (', round((time.time()-start)/60, 2),'min)')   
