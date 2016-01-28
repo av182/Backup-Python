@@ -42,7 +42,7 @@ def source_count(pth):
     dirs_src = 0
     files_src = 0
     total_size = 0
-    ptree = os.walk(backup_from)
+    ptree = os.walk(pth)
     for dirpath, dirnames, filenames in ptree:
         dirs_src = dirs_src + len(dirnames)
         files_src = files_src + len(filenames)
@@ -51,8 +51,23 @@ def source_count(pth):
             total_size = total_size + os.path.getsize(fullsrcpath)
     return dirs_src, files_src, total_size
 
+def final_stat():
+    print('')  
+    print('-----------------------------------------------------')
+    print('Files ready to be copied - ', len(files_to_be_copied))
+    print('Files copied - ', len(files_copied))
+    print('Skipped files - ', len(files_copy_error))
+    if not no_compare:
+        print('Comparsion results:')
+        print('   Files identical - ', len(files_identical))
+        print('   Files different - ', len(files_different)) 
+    dst_stat = source_count(dstfolder)
+    print('   Total size after backup: ',dst_stat[2],'bytes (', round(dst_stat[2]/1024/1024, 2), ' Mb)')
+    print('Size difference before and after backup- ', source_stat[2]-dst_stat[2], 'bytes')
+    print('Backup time - ', round(time.time()-start, 2), 'sec (', round((time.time()-start)/60, 2),'min)')
+
 #Logging copied files
-log = open(r'D:\PY\lglglg.log', 'w')    
+#log = open(r'D:\PY\lglglg.log', 'w')    
 def write_log(log_str):
     try:
         log.write(log_str+ '\n')
@@ -98,51 +113,54 @@ for dirpath, dirnames, filenames in ptree:
                 print("Not a folder detected!")
 
 #Copying files
-    for fl in filenames:
-        fullsrcpath = os.path.join(dirpath, fl)
-        fulldstpath = os.path.join(dstpath, fl)
-        files_to_be_copied.append(fullsrcpath)
-        i=i+1
-        #write_log(fl)
-        try:
-            shutil.copy2(fullsrcpath, fulldstpath)
-            files_copied.append(fullsrcpath)
-            if source_stat[1] >= 100:
-                if i%(source_stat[1]//100) == 0:
-                    ii = ii + 1
-                    print(ii, end=' ', flush=True)
-            else:
-                ii = ii + 1
-                print('Files copied: ', ii, end=' | ', flush=True)
-        except IOError as e:
-            files_copy_error.append(fullsrcpath)
-            #'file name is too long' exception handling
-            if len(fulldstpath)>259:
-                print ('\nSkipping file: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
-            else:
-                print('\nSkipping', fullsrcpath, e.errno, e.strerror)
-            continue
-        if not no_compare:
+    try:
+        for fl in filenames:
+            fullsrcpath = os.path.join(dirpath, fl)
+            fulldstpath = os.path.join(dstpath, fl)
+            files_to_be_copied.append(fullsrcpath)
+            i=i+1
+            #write_log(fl)
             try:
-                compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=False)
-                if compare_result:
-                    files_identical.append(fullsrcpath)
+                shutil.copy2(fullsrcpath, fulldstpath)
+                files_copied.append(fullsrcpath)
+
+                #progress bar
+                if source_stat[1] >= 100:
+                    #if source files >= 100, percentage is in output
+                    if i%(source_stat[1]//100) == 0:
+                        ii = ii + 1
+                        print(ii, end=' ', flush=True)
                 else:
-                    files_different.append(fulldstpath)
-                    print('Difference in file - ', fullsrcpath)
+                    #if source files < 100, file copied is in output instead (because of 'by zero division')
+                    ii = ii + 1
+                    print('Files copied: ', ii, end=' | ', flush=True)
+
             except IOError as e:
-                print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
-log.close()
-print('')  
-print('-----------------------------------------------------')
-print('Files ready to be copied - ', len(files_to_be_copied))
-print('Files copied - ', len(files_copied))
-print('Skipped files - ', len(files_copy_error))
-if not no_compare:
-    print('Comparsion results:')
-    print('   Files identical - ', len(files_identical))
-    print('   Files different - ', len(files_different)) 
-dst_stat = source_count(dstfolder)
-print('   Total size after backup: ',dst_stat[2],'bytes (', round(dst_stat[2]/1024/1024, 2), ' Mb)')
-print('Size difference before and after backup- ', source_stat[2]-dst_stat[2], 'bytes')
-print('Backup time - ', round(time.time()-start, 2), 'sec (', round((time.time()-start)/60, 2),'min)')   
+                files_copy_error.append(fullsrcpath)
+                #'file name is too long' exception handling
+                if len(fulldstpath)>259:
+                    print ('\nSkipping file: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
+                else:
+                    print('\nSkipping', fullsrcpath, e.errno, e.strerror)
+                continue
+
+            #comparsion realization
+            if not no_compare:
+                try:
+                    compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=False)
+                    if compare_result:
+                        files_identical.append(fullsrcpath)
+                    else:
+                        files_different.append(fulldstpath)
+                        print('Difference in file - ', fullsrcpath)
+                except IOError as e:
+                    print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
+    except KeyboardInterrupt:
+        print('\nOK. exit...')
+        dst_stat = source_count(dstfolder)
+        final_stat()
+        print('File copying before interrupt - ', files_to_be_copied[len(files_to_be_copied)-1] )
+        sys.exit()
+final_stat()
+#log.close()
+   

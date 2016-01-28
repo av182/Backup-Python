@@ -11,3 +11,4 @@ if 1%(source_stat//100) == 0:
 
 print(16//34)
 print(16%34)
+
