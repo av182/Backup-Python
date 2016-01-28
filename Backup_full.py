@@ -5,6 +5,12 @@ import datetime
 import filecmp
 import time
 
+'''
+usage: "Backup_full.py backup_from_folder backup_to_folder".  Backup and compare each file byte-by-byte.
+       "Backup_full.py backup_from_folder backup_to_folder -n". Backup without compare backuped files.
+
+'''
+
 start = time.time()
 
 if len(sys.argv) < 3:
@@ -45,7 +51,7 @@ def source_count(pth):
             total_size = total_size + os.path.getsize(fullsrcpath)
     return dirs_src, files_src, total_size
 
-#Logging file copied files
+#Logging copied files
 log = open(r'D:\PY\lglglg.log', 'w')    
 def write_log(log_str):
     try:
@@ -69,11 +75,12 @@ dstfolder = os.path.join(backup_to, now_time)
 os.mkdir(dstfolder)
 ptree = os.walk(backup_from)
 item_in_path_to_backup = len(backup_from.split('\\'))
-print('Copying files...')
+print('Copying files... See percents below...')
 print('')
-ii=0
+i = 0
+ii = 0
 for dirpath, dirnames, filenames in ptree:
-    #ii=ii+1
+    #i=i+1
     src_list_path = dirpath.split('\\')[item_in_path_to_backup:]
     dstpath=dstfolder
     for folders in src_list_path:
@@ -95,19 +102,25 @@ for dirpath, dirnames, filenames in ptree:
         fullsrcpath = os.path.join(dirpath, fl)
         fulldstpath = os.path.join(dstpath, fl)
         files_to_be_copied.append(fullsrcpath)
-        #ii=ii+1
-        #print(ii)
-        write_log(fl)
+        i=i+1
+        #write_log(fl)
         try:
             shutil.copy2(fullsrcpath, fulldstpath)
             files_copied.append(fullsrcpath)
+            if source_stat[1] >= 100:
+                if i%(source_stat[1]//100) == 0:
+                    ii = ii + 1
+                    print(ii, end=' ', flush=True)
+            else:
+                ii = ii + 1
+                print('Files copied: ', ii, end=' | ', flush=True)
         except IOError as e:
             files_copy_error.append(fullsrcpath)
             #'file name is too long' exception handling
             if len(fulldstpath)>259:
-                print ('Skipping file: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
+                print ('\nSkipping file: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
             else:
-                print('Skipping', fullsrcpath, e.errno, e.strerror)
+                print('\nSkipping', fullsrcpath, e.errno, e.strerror)
             continue
         if not no_compare:
             try:

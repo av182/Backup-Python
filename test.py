@@ -3,11 +3,11 @@ import shutil
 import datetime
 import filecmp
 
-strcmd = r'd:\py\backup\27012016-132510_full\testtesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetset.txt'
-print('STR_cmd -> ',len(strcmd))
-print(strcmd)
-strscript = 'testtesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetsetsetsettesttesttsetset.txt'
-print('STR_script -> ',len(strscript))
+source_stat = 1600
+ii =0
+if 1%(source_stat//100) == 0:
+	ii = ii + 1
+	print(ii, end=' ', flush=True)
 
-bstr = b'byte'
-print(bstr.encode('utf-8'))
+print(16//34)
+print(16%34)
