@@ -12,6 +12,37 @@ usage: "Backup_full.py backup_from_folder backup_to_folder".  Backup and compare
 '''
 
 start = time.time()
+backup_from = ''
+backup_to = ''
+files_to_be_copied = []
+files_copied = []
+files_identical = []
+files_different = []
+files_copy_error = []
+i = 0
+ii = 0
+
+def check_make_path(src, dst):
+    if src.lower() == dst.lower():
+        print('Source and Destination are identical. Exit...')
+        sys.exit()
+    elif not os.path.exists(src):
+        print('Source folder is not exist. Exit...')
+        sys.exit()
+    elif not os.path.exists(dst):
+        print('Destination folder is not exist. Exit...')
+        sys.exit()
+    elif not os.path.isdir(src):
+        print('Source path is not a folder. Exit...')
+        sys.exit()
+    elif not os.path.isdir(dst):
+        print('Destination path is not a folder. Exit...')
+        sys.exit()
+    else:
+        global backup_from
+        global backup_to
+        backup_from = src
+        backup_to = dst
 
 if len(sys.argv) < 3:
     print('Not enough arguments!')
@@ -21,8 +52,7 @@ if len(sys.argv) < 3:
     backup_from = r'D:\PY\tb'
     backup_to = r'D:\PY\backup'
 elif len(sys.argv) == 3:
-    backup_from = sys.argv[1]
-    backup_to = sys.argv[2]
+    check_make_path(sys.argv[1], sys.argv[2])
     no_compare = False
 elif len(sys.argv) == 4:
     if sys.argv[3] == '-n':
@@ -30,8 +60,8 @@ elif len(sys.argv) == 4:
     else:
         print("Bad argument. Need '-n' for non-comparsion backup")
         sys.exit()
-    backup_from = sys.argv[1]
-    backup_to = sys.argv[2]
+    check_make_path(sys.argv[1], sys.argv[2])
+
 else:
     print('Too many arguments!')
     print('Usage: Backup_full.py sourse_dir target_dir -n(optional)')
@@ -80,11 +110,7 @@ print('   Files in the source before backup: ',source_stat[1])
 print('   Total size before backup: ',source_stat[2],'bytes (', round(source_stat[2]/1024/1024, 2), ' Mb)')
 print('-----------------------------------------------------')
 
-files_to_be_copied = []
-files_copied = []
-files_identical = []
-files_different = []
-files_copy_error = []
+
 now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S_full')
 dstfolder = os.path.join(backup_to, now_time)
 os.mkdir(dstfolder)
@@ -92,8 +118,6 @@ ptree = os.walk(backup_from)
 item_in_path_to_backup = len(backup_from.split('\\'))
 print('Copying files... See percents below...')
 print('')
-i = 0
-ii = 0
 for dirpath, dirnames, filenames in ptree:
     #i=i+1
     src_list_path = dirpath.split('\\')[item_in_path_to_backup:]
