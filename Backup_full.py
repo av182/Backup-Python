@@ -45,6 +45,14 @@ def source_count(pth):
             total_size = total_size + os.path.getsize(fullsrcpath)
     return dirs_src, files_src, total_size
 
+#Logging file copied files
+log = open(r'D:\PY\lglglg.log', 'w')    
+def write_log(log_str):
+    try:
+        log.write(log_str+ '\n')
+    except:
+        log.write('Encode error\n')
+        
 source_stat = source_count(backup_from)
 print('   Dirs in the source before backup: ',source_stat[0])
 print('   Files in the source before backup: ',source_stat[1])
@@ -61,9 +69,11 @@ dstfolder = os.path.join(backup_to, now_time)
 os.mkdir(dstfolder)
 ptree = os.walk(backup_from)
 item_in_path_to_backup = len(backup_from.split('\\'))
+print('Copying files...')
+print('')
 ii=0
 for dirpath, dirnames, filenames in ptree:
-    ii=ii+1
+    #ii=ii+1
     src_list_path = dirpath.split('\\')[item_in_path_to_backup:]
     dstpath=dstfolder
     for folders in src_list_path:
@@ -85,6 +95,9 @@ for dirpath, dirnames, filenames in ptree:
         fullsrcpath = os.path.join(dirpath, fl)
         fulldstpath = os.path.join(dstpath, fl)
         files_to_be_copied.append(fullsrcpath)
+        #ii=ii+1
+        #print(ii)
+        write_log(fl)
         try:
             shutil.copy2(fullsrcpath, fulldstpath)
             files_copied.append(fullsrcpath)
@@ -106,7 +119,8 @@ for dirpath, dirnames, filenames in ptree:
                     print('Difference in file - ', fullsrcpath)
             except IOError as e:
                 print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
-   
+log.close()
+print('')  
 print('-----------------------------------------------------')
 print('Files ready to be copied - ', len(files_to_be_copied))
 print('Files copied - ', len(files_copied))
