@@ -6,6 +6,17 @@ import shutil
 import datetime
 import filecmp
 
+log = open(r'/home/user/py.log', 'w')
+ttt = '/mnt/winf/tb'
+log.write('TEST\n')
+lst = os.listdir(ttt.encode())
+print(lst)
+def write_log(log_str):
+	for items in log_str:
+		log.write(items+'\n')
+write_log(lst)	
+log.close()
+'''
 fullsrcpath = '/mnt/winf/doc2.txt'
 fulldstpath = '/home/user/bck/dc2.txt'
 
@@ -22,3 +33,5 @@ except os.error:
 
 print(os.path.getsize(fullsrcpath))
 print(os.path.getsize(fulldstpath))
+print('lalala')
+'''
