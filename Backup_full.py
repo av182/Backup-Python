@@ -19,6 +19,7 @@ files_copied = []
 files_identical = []
 files_different = []
 files_copy_error = []
+files_renamed = []
 i = 0
 ii = 0
 
@@ -87,6 +88,7 @@ def final_stat():
     print('Files ready to be copied - ', len(files_to_be_copied))
     print('Files copied - ', len(files_copied))
     print('Skipped files - ', len(files_copy_error))
+    print('Files renamed - ', len(files_renamed))
     if not no_compare:
         print('Comparsion results:')
         print('   Files identical - ', len(files_identical))
@@ -160,12 +162,20 @@ for dirpath, dirnames, filenames in ptree:
                     print('Files copied: ', ii, end=' | ', flush=True)
 
             except IOError as e:
-                files_copy_error.append(fullsrcpath)
                 #'file name is too long' exception handling
                 if len(fulldstpath)>259:
-                    print ('\nSkipping file: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
+                    try:
+                        print ('\nTrying to rename: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
+                        shutil.copy2(fullsrcpath, os.path.join(dstpath, fl[:10]+'_'+fl[-10:]))
+                        print('New name: ', fl[:10]+'_'+fl[-10:])
+                        files_renamed.append(fullsrcpath)
+                    except:
+                        print ('\nSkipping file: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
+                        files_copy_error.append(fullsrcpath)
+                        continue
                 else:
                     print('\nSkipping', fullsrcpath, e.errno, e.strerror)
+                    files_copy_error.append(fullsrcpath)
                 continue
 
             #comparsion realization
