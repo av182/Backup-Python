@@ -8,6 +8,7 @@ import time
 
 '''
 usage: "Backup_full.py backup_from_folder backup_to_folder".  Backup and compare each file byte-by-byte.
+       "Backup_full.py backup_from_folder backup_to_folder -a". Backup and compare only attributes of each file .
        "Backup_full.py backup_from_folder backup_to_folder -n". Backup without compare backuped files.
 
 '''
@@ -56,17 +57,21 @@ if len(sys.argv) < 3:
 elif len(sys.argv) == 3:
     check_make_path(sys.argv[1], sys.argv[2])
     no_compare = False
+    shallow_arg = False
 elif len(sys.argv) == 4:
     if sys.argv[3] == '-n':
         no_compare = True
+    elif sys.argv[3] == '-a':
+        no_compare = False
+        shallow_arg = True
     else:
-        print("Bad argument. Need '-n' for non-comparsion backup")
+        print("Bad argument. Need '-n' for non-comparsion backup or '-a' for only files attributes comparsion")
         sys.exit()
     check_make_path(sys.argv[1], sys.argv[2])
 
 else:
     print('Too many arguments!')
-    print('Usage: Backup_full.py sourse_dir target_dir -n(optional)')
+    print("Usage: Backup_full.py sourse_dir target_dir ('-n' or '-a')")
     sys.exit()
 
 def source_count(pth):
@@ -170,8 +175,8 @@ for dirpath, dirnames, filenames in ptree:
                     if len(fl.encode())>255:
                         try:
                             print ('\nTrying to rename: ', fulldstpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fl), ' characters.')
-                            shutil.copy2(fullsrcpath, os.path.join(dstpath, fl[:10]+'_'+fl[-10:]))
-                            print('New name: ', fl[:10]+'_'+fl[-10:])
+                            shutil.copy2(fullsrcpath, os.path.join(dstpath, fl[:70]+'_'+fl[-30:]))
+                            print('New name: ', fl[:70]+'_'+fl[-30:])
                             files_renamed.append(fullsrcpath) 
                         except:
                             print ('\nSkipping file: ', fulldstpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fl), ' characters.')
@@ -203,7 +208,7 @@ for dirpath, dirnames, filenames in ptree:
             #comparsion realization
             if not no_compare:
                 try:
-                    compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=False)
+                    compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=shallow_arg)
                     if compare_result:
                         files_identical.append(fullsrcpath)
 
