@@ -1,4 +1,4 @@
-#!/root/Python-3.5.1/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import os, sys
 import shutil
@@ -49,10 +49,10 @@ def check_make_path(src, dst):
 if len(sys.argv) < 3:
     print('Not enough arguments!')
     print('Usage: Backup_full.py sourse_dir target_dir -n(optional)')
-    #sys.exit()
-    no_compare = False
-    backup_from = r'D:\PY\tb'
-    backup_to = r'D:\PY\backup'
+    sys.exit()
+    #no_compare = False
+    #backup_from = r'D:\PY\tb'
+    #backup_to = r'D:\PY\backup'
 elif len(sys.argv) == 3:
     check_make_path(sys.argv[1], sys.argv[2])
     no_compare = False
@@ -118,12 +118,12 @@ now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S_full')
 dstfolder = os.path.join(backup_to, now_time)
 os.mkdir(dstfolder)
 ptree = os.walk(backup_from)
-item_in_path_to_backup = len(backup_from.split('\\'))
+item_in_path_to_backup = len(backup_from.split(os.sep))
 print('Copying files... See percents below...')
 print('')
 for dirpath, dirnames, filenames in ptree:
     #i=i+1
-    src_list_path = dirpath.split('\\')[item_in_path_to_backup:]
+    src_list_path = dirpath.split(os.sep)[item_in_path_to_backup:]
     dstpath=dstfolder
     for folders in src_list_path:
         dstpath = os.path.join(dstpath, folders)   
@@ -149,6 +149,8 @@ for dirpath, dirnames, filenames in ptree:
             #write_log(fl)
             try:
                 shutil.copy2(fullsrcpath, fulldstpath)
+                #rsync = 'rsync -a '+fullsrcpath+' '+fulldstpath
+                #os.popen(rsync)
                 files_copied.append(fullsrcpath)
 
                 #progress bar
@@ -163,22 +165,40 @@ for dirpath, dirnames, filenames in ptree:
                     print('Files copied: ', ii, end=' | ', flush=True)
 
             except IOError as e:
-                
                 #'file name is too long' exception handling
-                if len(fl.encode())>255:
-                    try:
-                        print ('\nTrying to rename: ', fulldstpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fl), ' characters.')
-                        shutil.copy2(fullsrcpath, os.path.join(dstpath, fl[:10]+'_'+fl[-10:]))
-                        print('New name: ', fl[:10]+'_'+fl[-10:])
-                        files_renamed.append(fullsrcpath) 
-                    except:
-                        print ('\nSkipping file: ', fulldstpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fl), ' characters.')
+                if sys.platform.startswith('linux'):
+                    if len(fl.encode())>255:
+                        try:
+                            print ('\nTrying to rename: ', fulldstpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fl), ' characters.')
+                            shutil.copy2(fullsrcpath, os.path.join(dstpath, fl[:10]+'_'+fl[-10:]))
+                            print('New name: ', fl[:10]+'_'+fl[-10:])
+                            files_renamed.append(fullsrcpath) 
+                        except:
+                            print ('\nSkipping file: ', fulldstpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fl), ' characters.')
+                            files_copy_error.append(fullsrcpath)
+                            continue
+                    else:
+                        print('\nSkipping', fullsrcpath, e.errno, e.strerror)
                         files_copy_error.append(fullsrcpath)
-                        continue
+                    continue
+                elif sys.platform.startswith('win32'):
+                    if len(fulldstpath)>259:
+                        try:
+                            print ('\nTrying to rename: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
+                            shutil.copy2(fullsrcpath, os.path.join(dstpath, fl[:10]+'_'+fl[-10:]))
+                            print('New name: ', fl[:10]+'_'+fl[-10:])
+                            files_renamed.append(fullsrcpath)
+                        except:
+                            print ('\nSkipping file: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
+                            files_copy_error.append(fullsrcpath)
+                            continue
+                    else:
+                        print('\nSkipping', fullsrcpath, e.errno, e.strerror)
+                        files_copy_error.append(fullsrcpath)
+                    continue
                 else:
-                    print('\nSkipping', fullsrcpath, e.errno, e.strerror)
-                    files_copy_error.append(fullsrcpath)
-                continue
+                    print('OS is not linux or win32. Exiting...')
+                    sys.exit()
 
             #comparsion realization
             if not no_compare:
@@ -186,6 +206,7 @@ for dirpath, dirnames, filenames in ptree:
                     compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=False)
                     if compare_result:
                         files_identical.append(fullsrcpath)
+
                     else:
                         files_different.append(fulldstpath)
                         print('Difference in file - ', fullsrcpath)
