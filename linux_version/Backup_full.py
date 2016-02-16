@@ -49,7 +49,7 @@ def check_make_path(src, dst):
 
 if len(sys.argv) < 3:
     print('Not enough arguments!')
-    print('Usage: Backup_full.py sourse_dir target_dir -n(optional)')
+    print('Usage: Backup_full.py sourse_dir target_dir (-n or -a)')
     sys.exit()
     #no_compare = False
     #backup_from = r'D:\PY\tb'
