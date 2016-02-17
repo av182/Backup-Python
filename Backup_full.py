@@ -85,7 +85,11 @@ def source_count(pth):
         files_src = files_src + len(filenames)
         for fl in filenames:
             fullsrcpath = os.path.join(dirpath, fl)
-            total_size = total_size + os.path.getsize(fullsrcpath)
+            try:
+                total_size = total_size + os.path.getsize(fullsrcpath)
+            except IOError as e:
+                print('Warning. Cannot check file size: '+ fullsrcpath, e.errno, e.strerror)
+                continue
     return dirs_src, files_src, total_size
 
 def final_stat():
@@ -111,7 +115,11 @@ def write_log(log_str):
         log.write(log_str+ '\n')
     except:
         log.write('Encode error\n')
-        
+
+def file_exist_warning(dst_check):
+    if os.path.isfile(dst_check):
+        print('Warning! File '+dst_check+' already exist in destination folder')
+
 source_stat = source_count(backup_from)
 print('   Dirs in the source before backup: ',source_stat[0])
 print('   Files in the source before backup: ',source_stat[1])
@@ -124,6 +132,8 @@ dstfolder = os.path.join(backup_to, now_time)
 os.mkdir(dstfolder)
 ptree = os.walk(backup_from)
 item_in_path_to_backup = len(backup_from.split(os.sep))
+print('Backup from: ',backup_from)
+print('Item in path to backup: ', item_in_path_to_backup)
 print('Copying files... See percents below...')
 print('')
 for dirpath, dirnames, filenames in ptree:
@@ -143,6 +153,8 @@ for dirpath, dirnames, filenames in ptree:
                 os.remove(dircheck)
                 os.makedirs(dircheck)
                 print("Not a folder detected!")
+            else:
+                print('Target dir already exist! Recreating...')
 
 #Copying files
     try:
@@ -153,6 +165,7 @@ for dirpath, dirnames, filenames in ptree:
             i=i+1
             #write_log(fl)
             try:
+                file_exist_warning(fulldstpath)
                 shutil.copy2(fullsrcpath, fulldstpath)
                 #rsync = 'rsync -a '+fullsrcpath+' '+fulldstpath
                 #os.popen(rsync)
@@ -167,7 +180,7 @@ for dirpath, dirnames, filenames in ptree:
                 else:
                     #if source files < 100, file copied is in output instead (because of 'by zero division')
                     ii = ii + 1
-                    print('Files copied: ', ii, end=' | ', flush=True)
+                    print('Files copied: ', ii, flush=True)
 
             except IOError as e:
                 #'file name is too long' exception handling
@@ -175,7 +188,9 @@ for dirpath, dirnames, filenames in ptree:
                     if len(fl.encode())>255:
                         try:
                             print ('\nTrying to rename: ', fulldstpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fl), ' characters.')
-                            shutil.copy2(fullsrcpath, os.path.join(dstpath, fl[:70]+'_'+fl[-30:]))
+                            fulldstpath = os.path.join(dstpath, fl[:70]+'_'+fl[-30:])
+                            file_exist_warning(fulldstpath)
+                            shutil.copy2(fullsrcpath, fulldstpath)
                             print('New name: ', fl[:70]+'_'+fl[-30:])
                             files_renamed.append(fullsrcpath) 
                         except:
@@ -185,12 +200,14 @@ for dirpath, dirnames, filenames in ptree:
                     else:
                         print('\nSkipping', fullsrcpath, e.errno, e.strerror)
                         files_copy_error.append(fullsrcpath)
-                    continue
+                        continue
                 elif sys.platform.startswith('win32'):
                     if len(fulldstpath)>259:
                         try:
                             print ('\nTrying to rename: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
-                            shutil.copy2(fullsrcpath, os.path.join(dstpath, fl[:10]+'_'+fl[-10:]))
+                            fulldstpath = os.path.join(dstpath, fl[:10]+'_'+fl[-10:])
+                            file_exist_warning(fulldstpath)
+                            shutil.copy2(fullsrcpath, fulldstpath)
                             print('New name: ', fl[:10]+'_'+fl[-10:])
                             files_renamed.append(fullsrcpath)
                         except:
@@ -200,7 +217,7 @@ for dirpath, dirnames, filenames in ptree:
                     else:
                         print('\nSkipping', fullsrcpath, e.errno, e.strerror)
                         files_copy_error.append(fullsrcpath)
-                    continue
+                        continue
                 else:
                     print('OS is not linux or win32. Exiting...')
                     sys.exit()
@@ -208,6 +225,7 @@ for dirpath, dirnames, filenames in ptree:
             #comparsion realization
             if not no_compare:
                 try:
+                    #print('Comparing ',fullsrcpath, ' -> ', fulldstpath)
                     compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=shallow_arg)
                     if compare_result:
                         files_identical.append(fullsrcpath)
