@@ -1,5 +1,5 @@
 # Backup-Python
-Backup scripts (full, differential, incremental). Also compares each file after backup for correctness.
+Cross-platform backup scripts. After copying each file - compares it with source for correctness.
 
 Backup_full.py:
 
@@ -12,9 +12,7 @@ Example: Backup_full.py "D:\backup_from" "\\server\backup_to"  -- creates folder
 Project is NOT DONE yet (under development)!
 
 Backup_full.py - make full backup of the source folder.
-backup_differential.py - make a differential backup based on previous full backup.
+backup_differential.py - make a differential backup based on previous full backup (Under development).
 test.py - notning usefull, just small tests for me.
-
-Linux_version - Linux version of the scripts. Will be inegrated in main scripts later.
 
 If you find it usefull anyhow, it would be great!
