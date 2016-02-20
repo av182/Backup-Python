@@ -87,8 +87,12 @@ def source_count(pth):
             fullsrcpath = os.path.join(dirpath, fl)
             try:
                 total_size = total_size + os.path.getsize(fullsrcpath)
+                #total_size = total_size + os.lstat(fullsrcpath).st_size
             except IOError as e:
-                print('Warning. Cannot check file size: '+ fullsrcpath, e.errno, e.strerror)
+                if os.path.islink(fullsrcpath):
+                    print('Broken symlink. Cannot check size: '+ fullsrcpath)
+                else:
+                    print('Warning. Cannot check file size: '+ fullsrcpath, e.errno, e.strerror)
                 continue
     return dirs_src, files_src, total_size
 
@@ -134,7 +138,7 @@ ptree = os.walk(backup_from)
 item_in_path_to_backup = len(backup_from.split(os.sep))
 print('Backup from: ',backup_from)
 print('Item in path to backup: ', item_in_path_to_backup)
-print('Copying files... See percents below...')
+print('Copying files... See percents below... Progress is based on count(not size) of files and may sometimes freeze for a while.')
 print('')
 for dirpath, dirnames, filenames in ptree:
     #i=i+1
@@ -166,7 +170,7 @@ for dirpath, dirnames, filenames in ptree:
             #write_log(fl)
             try:
                 file_exist_warning(fulldstpath)
-                shutil.copy2(fullsrcpath, fulldstpath)
+                shutil.copy2(fullsrcpath, fulldstpath, follow_symlinks=False)
                 #rsync = 'rsync -a '+fullsrcpath+' '+fulldstpath
                 #os.popen(rsync)
                 files_copied.append(fullsrcpath)
