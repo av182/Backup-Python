@@ -33,11 +33,11 @@ def compare(fs, fd):
     try:
         compare_result = filecmp.cmp(fs, fd, shallow=False)
         if compare_result:
-            print('Source and destination files are identical')
+            #print('Source and destination files are identical')
             files_identical = files_identical + 1
-            print('Files IDEN - ', files_identical)
+            #print('Files IDEN - ', files_identical)
         else:
-            print('Source and destination files are DIFFERENT')
+            #print('Source and destination files are DIFFERENT')
             files_different = files_different + 1
     except IOError as e:
         print('Comparsion ',fs, ' and ', fd, ' failed!', e.errno, e.strerror)
@@ -68,24 +68,25 @@ dstfolder = os.path.join(backup_to, now_time)
 os.mkdir(dstfolder)
 
 #scaning source folder (script main operation)
-item_in_path_to_backup = len(backup_from.split('\\'))
+item_in_path_to_backup = len(backup_from.split(os.sep))
+#print('Item in path to backup:',item_in_path_to_backup)
 ptree = os.walk(backup_from)
 ii=0
 for dirpath, dirnames, filenames in ptree:
     ii=ii+1
-    print(ii)
-    print('Where we are now(dirpath) - ',dirpath)
-    print('Directories in current point(dirnames) - ',dirnames)    
-    src_list_path = dirpath.split('\\')[item_in_path_to_backup:]
+    #print(ii)
+    #print('Where we are now(dirpath) - ',dirpath)
+    #print('Directories in current point(dirnames) - ',dirnames)    
+    src_list_path = dirpath.split(os.sep)[item_in_path_to_backup:]
     full_current_point=path_prev_full_backup
     dstpath = dstfolder
-    print('Folder in dirpath to be added to dstpath at this step(src_list_path) - ',src_list_path)
+    #print('Folder in dirpath to be added to dstpath at this step(src_list_path) - ',src_list_path)
     for folders in src_list_path:
         full_current_point = os.path.join(full_current_point, folders)
         dstpath = os.path.join(dstpath, folders)
-    print("Where we are gonna check for file presence(full_current_point) - ", full_current_point)
-    print("Where we are gonna copy to (dstpath) - ", dstpath)
-    print('----------------------------------------------')
+    #print("Where we are gonna check for file presence(full_current_point) - ", full_current_point)
+    #print("Where we are gonna copy to (dstpath) - ", dstpath)
+    #print('----------------------------------------------')
     
     #Making directories
     for dirs in dirnames:
@@ -110,17 +111,22 @@ for dirpath, dirnames, filenames in ptree:
                 shutil.copy2(fullsrcpath, fulldstpath)
                 path_collection.append(fullsrcpath)
                 compare(fullsrcpath, fulldstpath)
-                print('file copied and checked.')
+                #print('file copied and checked.')
             except IOError as e:
-                print('skipping', fullsrcpath, e.errno, e.strerror)
+                #print('skipping', fullsrcpath, e.errno, e.strerror)
                 continue
-        else:
+        #else:
             #if os.path.getsize(fullsrcpath) == os.path.getsize(fullprevpath):
-            print('file exist in full backup. Skiping...')
+            #print('file exist in full backup. Skiping...')
 
 print('Files copied - ', len(path_collection))
 print('Files identical - ', files_identical)
 print('Files different - ', files_different)   
-print(path_collection)
+
+for pth in path_collection:
+    try:
+        print(pth)
+    except:
+        print('ERROR -> ')
 
 del_empty_folders(dstfolder)
