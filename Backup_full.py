@@ -10,7 +10,6 @@ import time
 usage: "Backup_full.py backup_from_folder backup_to_folder".  Backup and compare each file byte-by-byte.
        "Backup_full.py backup_from_folder backup_to_folder -a". Backup and compare only attributes of each file .
        "Backup_full.py backup_from_folder backup_to_folder -n". Backup without compare backuped files.
-
 '''
 
 start = time.time()
@@ -24,22 +23,37 @@ files_copy_error = []
 files_renamed = []
 i = 0
 ii = 0
+no_compare = False
+compare_only_attr = False
 
+def usage():
+    print('')
+    print('Usage:')
+    print('Backup_full.py backup_from_folder backup_to_folder. Backup and compare each file byte-by-byte.')
+    print('Backup_full.py backup_from_folder backup_to_folder -a. Backup and compare only attributes of each file.')
+    print('Backup_full.py backup_from_folder backup_to_folder -n. Backup without compare backuped files.')
+
+#checking and initializing source and destination folder variable
 def check_make_path(src, dst):
     if src.lower() == dst.lower():
         print('Source and Destination are identical. Exit...')
+        usage()
         sys.exit()
     elif not os.path.exists(src):
         print('Source folder is not exist. Exit...')
+        usage()
         sys.exit()
     elif not os.path.exists(dst):
         print('Destination folder is not exist. Exit...')
+        usage()
         sys.exit()
     elif not os.path.isdir(src):
         print('Source path is not a folder. Exit...')
+        usage()
         sys.exit()
     elif not os.path.isdir(dst):
         print('Destination path is not a folder. Exit...')
+        usage()
         sys.exit()
     else:
         global backup_from
@@ -47,35 +61,32 @@ def check_make_path(src, dst):
         backup_from = src
         backup_to = dst
 
+#checking arguments
 if len(sys.argv) < 3:
     print('Not enough arguments!')
-    print('Usage: Backup_full.py sourse_dir target_dir (-n or -a)')
+    usage()
     sys.exit()
     #no_compare = False
     #backup_from = r'D:\PY\tb'
     #backup_to = r'D:\PY\backup'
 elif len(sys.argv) == 3:
     check_make_path(sys.argv[1], sys.argv[2])
-    no_compare = False
-    shallow_arg = False
 elif len(sys.argv) == 4:
     if sys.argv[3] == '-n':
         no_compare = True
     elif sys.argv[3] == '-a':
-        no_compare = False
-        shallow_arg = True
+        compare_only_attr = True
     else:
         print("Bad argument. Need '-n' for non-comparsion backup or '-a' for only files attributes comparsion")
         sys.exit()
     check_make_path(sys.argv[1], sys.argv[2])
-
 else:
     print('Too many arguments!')
-    print("Usage: Backup_full.py sourse_dir target_dir ('-n' or '-a')")
+    usage()
     sys.exit()
 
 def source_count(pth):
-    print("Gathering statistics...")
+    print("getting statistics...")
     dirs_src = 0
     files_src = 0
     total_size = 0
@@ -230,7 +241,7 @@ for dirpath, dirnames, filenames in ptree:
             if not no_compare:
                 try:
                     #print('Comparing ',fullsrcpath, ' -> ', fulldstpath)
-                    compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=shallow_arg)
+                    compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=compare_only_attr)
                     if compare_result:
                         files_identical.append(fullsrcpath)
 
