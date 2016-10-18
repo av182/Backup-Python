@@ -185,15 +185,18 @@ for dirpath, dirnames, filenames in ptree:
                 #rsync = 'rsync -a '+fullsrcpath+' '+fulldstpath
                 #os.popen(rsync)
                 files_copied.append(fullsrcpath)
-
+                if fl=='123.txt':
+                    fl_test = open(fullsrcpath,'a')
+                    print('2',file=fl_test)
+                    fl_test.close()
                 #progress bar
                 if source_stat[1] >= 100:
-                    #if source files >= 100, percentage is in output
+                    #if source files >= 100, percentage goes to stdout
                     if i%(source_stat[1]//100) == 0:
                         ii = ii + 1
                         print(ii, end=' ', flush=True)
                 else:
-                    #if source files < 100, file copied is in output instead (because of 'by zero division')
+                    #if source files < 100, file copied goes to stdout instead (because of 'by zero division')
                     ii = ii + 1
                     print('Files copied: ', ii, flush=True)
 
