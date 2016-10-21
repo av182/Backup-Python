@@ -65,10 +65,10 @@ def check_make_path(src, dst):
 if len(sys.argv) < 3:
     print('Not enough arguments!')
     usage()
-    sys.exit()
-    #no_compare = False
-    #backup_from = r'D:\PY\tb'
-    #backup_to = r'D:\PY\backup'
+    #sys.exit()
+    no_compare = False
+    backup_from = r'D:\PY\tb'
+    backup_to = r'D:\PY\tb1'
 elif len(sys.argv) == 3:
     check_make_path(sys.argv[1], sys.argv[2])
 elif len(sys.argv) == 4:
@@ -85,8 +85,8 @@ else:
     usage()
     sys.exit()
 
-def source_count(pth):
-    print("getting statistics...")
+def files_count(stat_title, pth):
+    print(stat_title)
     dirs_src = 0
     files_src = 0
     total_size = 0
@@ -105,7 +105,11 @@ def source_count(pth):
                 else:
                     print('Warning. Cannot check file size: '+ fullsrcpath, e.errno, e.strerror)
                 continue
-    return dirs_src, files_src, total_size
+    print('   Directories: ', dirs_src)
+    print('   Files: ', files_src)
+    print('   Total size: ',total_size,'bytes (', round(total_size/1024/1024, 2), ' Mb)')
+    print('-----------------------------------------------------')
+    #return dirs_src, files_src, total_size
 
 def final_stat():
     print('')  
@@ -113,12 +117,12 @@ def final_stat():
     print('Files ready to be copied - ', len(files_to_be_copied))
     print('Files copied - ', len(files_copied))
     print('Skipped files - ', len(files_copy_error))
-    print('Files renamed - ', len(files_renamed))
+    print('Files renamed and copied - ', len(files_renamed))
     if not no_compare:
         print('Comparsion results:')
         print('   Files identical - ', len(files_identical))
         print('   Files different - ', len(files_different)) 
-    dst_stat = source_count(dstfolder)
+    dst_stat = files_count(dstfolder)
     print('   Total size after backup: ',dst_stat[2],'bytes (', round(dst_stat[2]/1024/1024, 2), ' Mb)')
     print('Size difference before and after backup- ', source_stat[2]-dst_stat[2], 'bytes')
     print('Backup time - ', round(time.time()-start, 2), 'sec (', round((time.time()-start)/60, 2),'min)')
@@ -135,11 +139,8 @@ def file_exist_warning(dst_check):
     if os.path.isfile(dst_check):
         print('Warning! File '+dst_check+' already exist in destination folder')
 
-source_stat = source_count(backup_from)
-print('   Dirs in the source before backup: ',source_stat[0])
-print('   Files in the source before backup: ',source_stat[1])
-print('   Total size before backup: ',source_stat[2],'bytes (', round(source_stat[2]/1024/1024, 2), ' Mb)')
-print('-----------------------------------------------------')
+#Statistics BEFORE backup
+files_count("Statistics BEFORE backup", backup_from)
 
 
 now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S_full')
@@ -185,12 +186,12 @@ for dirpath, dirnames, filenames in ptree:
                 #rsync = 'rsync -a '+fullsrcpath+' '+fulldstpath
                 #os.popen(rsync)
                 files_copied.append(fullsrcpath)
-                if fl=='123.txt':
+                '''if fl=='123.txt':
                     fl_test = open(fullsrcpath,'a')
                     print('2',file=fl_test)
-                    fl_test.close()
+                    fl_test.close()'''
                 #progress bar
-                if source_stat[1] >= 100:
+                '''if source_stat[1] >= 100:
                     #if source files >= 100, percentage goes to stdout
                     if i%(source_stat[1]//100) == 0:
                         ii = ii + 1
@@ -198,7 +199,7 @@ for dirpath, dirnames, filenames in ptree:
                 else:
                     #if source files < 100, file copied goes to stdout instead (because of 'by zero division')
                     ii = ii + 1
-                    print('Files copied: ', ii, flush=True)
+                    print('Files copied: ', ii, flush=True)'''
 
             except IOError as e:
                 #'file name is too long' exception handling
@@ -255,10 +256,12 @@ for dirpath, dirnames, filenames in ptree:
                     print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
     except KeyboardInterrupt:
         print('\nOK. exit...')
-        dst_stat = source_count(dstfolder)
-        final_stat()
+        files_count("Statistics IN DESTINATION after INTERRUPT",dstfolder)
+        #final_stat()
         print('File copying before interrupt - ', files_to_be_copied[len(files_to_be_copied)-1] )
         sys.exit()
-final_stat()
+
+files_count("Statistics IN DESTINATION after backup",dstfolder)
+#final_stat()
 #log.close()
    
