@@ -8,7 +8,6 @@ import time
 
 '''
 usage: "Backup_full.py backup_from_folder backup_to_folder".  Backup and compare each file byte-by-byte.
-       "Backup_full.py backup_from_folder backup_to_folder -a". Backup and compare only attributes of each file .
        "Backup_full.py backup_from_folder backup_to_folder -n". Backup without compare backuped files.
 '''
 
@@ -20,16 +19,13 @@ files_identical = []
 files_different = []
 files_copy_error = []
 files_renamed = []
+files_in_source = 0
 i = 0
-ii = 0
 no_compare = False
-compare_only_attr = False
 
 def usage():
-    print('')
-    print('Usage:')
+    print('\nUsage:')
     print('Backup_full.py backup_from_folder backup_to_folder. Backup and compare each file byte-by-byte.')
-    print('Backup_full.py backup_from_folder backup_to_folder -a. Backup and compare only attributes of each file.')
     print('Backup_full.py backup_from_folder backup_to_folder -n. Backup without compare backuped files.')
 
 #checking and initializing source and destination folder variable
@@ -64,19 +60,17 @@ def check_make_path(src, dst):
 if len(sys.argv) < 3:
     print('Not enough arguments!')
     usage()
-    #sys.exit()
-    no_compare = False
-    backup_from = r'D:\PY\tb'
-    backup_to = r'D:\PY\tb1'
+    sys.exit()
+    #backup_from = r'D:\PY\tb'
+    #backup_to = r'D:\PY\tb1'
 elif len(sys.argv) == 3:
     check_make_path(sys.argv[1], sys.argv[2])
 elif len(sys.argv) == 4:
     if sys.argv[3] == '-n':
         no_compare = True
-    elif sys.argv[3] == '-a':
-        compare_only_attr = True
     else:
-        print("Bad argument. Need '-n' for non-comparsion backup or '-a' for only files attributes comparsion")
+        print('Bad argument!')
+        usage()
         sys.exit()
     check_make_path(sys.argv[1], sys.argv[2])
 else:
@@ -86,12 +80,11 @@ else:
 
 #print number of dirs, files and total size of files in the given directory
 def files_count(stat_title, pth):
-    print(stat_title)
+    print('\n',stat_title)
     dirs_src = 0
     files_src = 0
     total_size = 0
-    ptree = os.walk(pth)
-    for dirpath, dirnames, filenames in ptree:
+    for dirpath, dirnames, filenames in os.walk(pth):
         dirs_src = dirs_src + len(dirnames)
         files_src = files_src + len(filenames)
         for fl in filenames:
@@ -109,22 +102,31 @@ def files_count(stat_title, pth):
     print('   Files: ', files_src)
     print('   Total size: ',total_size,'bytes (', round(total_size/1024/1024, 2), ' Mb)')
     print('-----------------------------------------------------')
-    #return dirs_src, files_src, total_size
+    #this will be needed in progress bar
+    global files_in_source
+    if (files_in_source==0):
+        #file_count function will be called twice (before and after). We need before (source) files count
+        #so we need to initialize file_in_source once.
+        files_in_source=files_src
 
-def final_stat():
-    print('')  
-    print('-----------------------------------------------------')
-    print('Files ready to be copied - ', len(files_to_be_copied))
+def final_stat():  
+    print('\n-----------------------------------------------------')
     print('Files copied - ', len(files_copied))
     print('Skipped files - ', len(files_copy_error))
-    print('Files renamed and copied - ', len(files_renamed))
+    print('Files renamed - ', len(files_renamed))
     if not no_compare:
         print('Comparsion results:')
         print('   Files identical - ', len(files_identical))
         print('   Files different - ', len(files_different)) 
-    dst_stat = files_count(dstfolder)
-    print('   Total size after backup: ',dst_stat[2],'bytes (', round(dst_stat[2]/1024/1024, 2), ' Mb)')
-    print('Size difference before and after backup- ', source_stat[2]-dst_stat[2], 'bytes')
+        if len(files_different) != 0:
+            for i in files_different:
+                try:
+                    print('Source file:')
+                    print(i[0],' -> ',i[1],' -> ',i[2])
+                    print('Destination file:')
+                    print(i[3],' -> ',i[4],' -> ',i[5])
+                except:
+                    print('File name decode error. Cannot print to stdout')
     print('Backup time - ', round(time.time()-start, 2), 'sec (', round((time.time()-start)/60, 2),'min)')
 
 #Logging copied files
@@ -139,14 +141,10 @@ def file_exist_warning(dst_check):
     if os.path.isfile(dst_check):
         print('Warning! File '+dst_check+' already exist in destination folder')
 
-#checking if file path or name is too long and therefore needs to be renamed before backup
+#checking if destination file path or name is too long and therefore destination file needs to be renamed before backup
 def name_length_too_long(fullpath):
     if sys.platform.startswith('win32'):
-        print(fullpath)
-        print('win32')
-        print(len(fullpath))
         if len(fullpath)>259:
-            print('True')
             return True
     elif sys.platform.startswith('linux'):
         if len(os.path.basename(fullpath).encode())>255:
@@ -154,7 +152,6 @@ def name_length_too_long(fullpath):
     else:
         print('OS is not linux or win32. Exiting script...')
         sys.exit()
-    print('False')
     return False
 
 #rename file with too long name before backup 
@@ -164,8 +161,25 @@ def rename_file(file_to_rename):
     elif sys.platform.startswith('linux'):
         return file_to_rename[:70]+'_'+file_to_rename[-30:]
 
+
+#progrees bar implementation
+def progress_bar(ii):
+    global files_in_source
+    one_percent = round(files_in_source/100)
+    if files_in_source >= 100:
+    #if source files >= 100, percentage goes to stdout
+        if ii%one_percent == 0 and ii//one_percent<=100:
+            print(ii//one_percent, end=' ', flush=True)
+    else:
+        #if source files < 100, number of the copying file goes to stdout instead (because of 'by zero division')
+        print('Files copied: ', ii, flush=True)
+
+#time formatting
+def time_format(tm):
+    return datetime.datetime.fromtimestamp(tm).strftime('%Y-%m-%d %H:%M:%S')
+
 #Statistics BEFORE backup
-files_count("Statistics BEFORE backup", backup_from)
+files_count("Statistics in source BEFORE backup", backup_from)
 
 now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S_full')
 dstfolder = os.path.join(backup_to, now_time)
@@ -202,6 +216,9 @@ for dirpath, dirnames, filenames in ptree:
             fullsrcpath = os.path.join(dirpath, fl)
             fulldstpath = os.path.join(dstpath, fl)
 
+            i=i+1
+            progress_bar(i)
+
             #checking if source dir and file are exist at the moment of backup 
             if not os.path.isdir(dirpath):
                 print('Directory is missing at the moment of backup. Skipping directory. ',dirpath)
@@ -216,27 +233,21 @@ for dirpath, dirnames, filenames in ptree:
             #saving mtime and size of the source file
             mtime_source = os.path.getmtime(fullsrcpath)
             size_source = os.path.getsize(fullsrcpath)
+            '''
+            #test
+            if fl=='123.txt':
+                    fl_test = open(fullsrcpath,'a')
+                    print('2',file=fl_test)
+                    fl_test.close()'''
 
-            i=i+1
+
             #write_log(fl)
+
             try:
                 file_exist_warning(fulldstpath)
                 shutil.copy2(fullsrcpath, fulldstpath, follow_symlinks=False)
                 files_copied.append(fullsrcpath)
-                '''if fl=='123.txt':
-                    fl_test = open(fullsrcpath,'a')
-                    print('2',file=fl_test)
-                    fl_test.close()'''
-                #progress bar
-                '''if source_stat[1] >= 100:
-                    #if source files >= 100, percentage goes to stdout
-                    if i%(source_stat[1]//100) == 0:
-                        ii = ii + 1
-                        print(ii, end=' ', flush=True)
-                else:
-                    #if source files < 100, file copied goes to stdout instead (because of 'by zero division')
-                    ii = ii + 1
-                    print('Files copied: ', ii, flush=True)'''
+                
 
             except IOError as e:
                 if name_length_too_long(fulldstpath):
@@ -244,7 +255,9 @@ for dirpath, dirnames, filenames in ptree:
                         print ('\nTrying to rename: ', fullsrcpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fulldstpath), ' characters.')
                     except:
                         print('\nTrying to rename file but cannot print its name (decode error)')
-                    fulldstpath = os.path.join(dstpath, rename_file(fl))
+                    new_name = rename_file(fl)
+                    print('New name - ',new_name)
+                    fulldstpath = os.path.join(dstpath, new_name)
                     file_exist_warning(fulldstpath)
                     try:
                         shutil.copy2(fullsrcpath, fulldstpath)
@@ -270,17 +283,18 @@ for dirpath, dirnames, filenames in ptree:
                     if (mtime_source==mtime_dest and size_source==size_dest):
                         files_identical.append(fulldstpath)
                     else:
-                        files_different.append(fulldstpath)
                         print('Difference in file - ', fulldstpath)
+
+                        files_different.append([fullsrcpath, time_format(mtime_source), size_source, fulldstpath, time_format(mtime_dest), size_dest])
                 except IOError as e:
                     print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
     except KeyboardInterrupt:
         print('\nOK. exit...')
-        files_count("Statistics IN DESTINATION after INTERRUPT",dstfolder)
-        #final_stat()
+        files_count("\nStatistics IN DESTINATION after INTERRUPT",dstfolder)
+        final_stat()
         print('File copying before interrupt - ', file_copying )
         sys.exit()
-
-files_count("Statistics IN DESTINATION after backup",dstfolder)
-#final_stat()
+print('\n-----------------------------------------------------')
+files_count("\nStatistics IN DESTINATION after backup",dstfolder)
+final_stat()
 #log.close()
