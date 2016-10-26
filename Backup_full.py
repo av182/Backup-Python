@@ -15,7 +15,6 @@ usage: "Backup_full.py backup_from_folder backup_to_folder".  Backup and compare
 start = time.time()
 backup_from = ''
 backup_to = ''
-files_to_be_copied = []
 files_copied = []
 files_identical = []
 files_different = []
@@ -85,6 +84,7 @@ else:
     usage()
     sys.exit()
 
+#print number of dirs, files and total size of files in the given directory
 def files_count(stat_title, pth):
     print(stat_title)
     dirs_src = 0
@@ -139,9 +139,33 @@ def file_exist_warning(dst_check):
     if os.path.isfile(dst_check):
         print('Warning! File '+dst_check+' already exist in destination folder')
 
+#checking if file path or name is too long and therefore needs to be renamed before backup
+def name_length_too_long(fullpath):
+    if sys.platform.startswith('win32'):
+        print(fullpath)
+        print('win32')
+        print(len(fullpath))
+        if len(fullpath)>259:
+            print('True')
+            return True
+    elif sys.platform.startswith('linux'):
+        if len(os.path.basename(fullpath).encode())>255:
+            return True
+    else:
+        print('OS is not linux or win32. Exiting script...')
+        sys.exit()
+    print('False')
+    return False
+
+#rename file with too long name before backup 
+def rename_file(file_to_rename):
+    if sys.platform.startswith('win32'):
+        return file_to_rename[:10]+'_'+file_to_rename[-10:]
+    elif sys.platform.startswith('linux'):
+        return file_to_rename[:70]+'_'+file_to_rename[-30:]
+
 #Statistics BEFORE backup
 files_count("Statistics BEFORE backup", backup_from)
-
 
 now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S_full')
 dstfolder = os.path.join(backup_to, now_time)
@@ -177,14 +201,27 @@ for dirpath, dirnames, filenames in ptree:
         for fl in filenames:
             fullsrcpath = os.path.join(dirpath, fl)
             fulldstpath = os.path.join(dstpath, fl)
-            files_to_be_copied.append(fullsrcpath)
+
+            #checking if source dir and file are exist at the moment of backup 
+            if not os.path.isdir(dirpath):
+                print('Directory is missing at the moment of backup. Skipping directory. ',dirpath)
+                break
+            if not os.path.isfile(fullsrcpath):
+                print('File is missing at the moment of backup. Skipping. ',fullsrcpath)
+                continue
+
+            #file_copying is needed when interrupt occurs (last file that was being copied before interrupt)
+            file_copying = fullsrcpath
+            
+            #saving mtime and size of the source file
+            mtime_source = os.path.getmtime(fullsrcpath)
+            size_source = os.path.getsize(fullsrcpath)
+
             i=i+1
             #write_log(fl)
             try:
                 file_exist_warning(fulldstpath)
                 shutil.copy2(fullsrcpath, fulldstpath, follow_symlinks=False)
-                #rsync = 'rsync -a '+fullsrcpath+' '+fulldstpath
-                #os.popen(rsync)
                 files_copied.append(fullsrcpath)
                 '''if fl=='123.txt':
                     fl_test = open(fullsrcpath,'a')
@@ -202,66 +239,48 @@ for dirpath, dirnames, filenames in ptree:
                     print('Files copied: ', ii, flush=True)'''
 
             except IOError as e:
-                #'file name is too long' exception handling
-                if sys.platform.startswith('linux'):
-                    if len(fl.encode())>255:
-                        try:
-                            print ('\nTrying to rename: ', fulldstpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fl), ' characters.')
-                            fulldstpath = os.path.join(dstpath, fl[:70]+'_'+fl[-30:])
-                            file_exist_warning(fulldstpath)
-                            shutil.copy2(fullsrcpath, fulldstpath)
-                            print('New name: ', fl[:70]+'_'+fl[-30:])
-                            files_renamed.append(fullsrcpath) 
-                        except:
-                            print ('\nSkipping file: ', fulldstpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fl), ' characters.')
-                            files_copy_error.append(fullsrcpath)
-                            continue
-                    else:
-                        print('\nSkipping', fullsrcpath, e.errno, e.strerror)
-                        files_copy_error.append(fullsrcpath)
-                        continue
-                elif sys.platform.startswith('win32'):
-                    if len(fulldstpath)>259:
-                        try:
-                            print ('\nTrying to rename: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
-                            fulldstpath = os.path.join(dstpath, fl[:10]+'_'+fl[-10:])
-                            file_exist_warning(fulldstpath)
-                            shutil.copy2(fullsrcpath, fulldstpath)
-                            print('New name: ', fl[:10]+'_'+fl[-10:])
-                            files_renamed.append(fullsrcpath)
-                        except:
-                            print ('\nSkipping file: ', fulldstpath,' Destination path is too long -> ', len(fulldstpath))
-                            files_copy_error.append(fullsrcpath)
-                            continue
-                    else:
-                        print('\nSkipping', fullsrcpath, e.errno, e.strerror)
+                if name_length_too_long(fulldstpath):
+                    try:
+                        print ('\nTrying to rename: ', fullsrcpath,' File name is too long -> ', len(fl.encode()), ' bytes. ', len(fulldstpath), ' characters.')
+                    except:
+                        print('\nTrying to rename file but cannot print its name (decode error)')
+                    fulldstpath = os.path.join(dstpath, rename_file(fl))
+                    file_exist_warning(fulldstpath)
+                    try:
+                        shutil.copy2(fullsrcpath, fulldstpath)
+                        files_copied.append(fullsrcpath)
+                        files_renamed.append(fullsrcpath)
+                    except:
+                        print ('\nErrors while copying renamed file. Skipping file: ', fulldstpath)
                         files_copy_error.append(fullsrcpath)
                         continue
                 else:
-                    print('OS is not linux or win32. Exiting...')
-                    sys.exit()
+                    print('\nSkipping', fullsrcpath, e.errno, e.strerror)
+                    files_copy_error.append(fullsrcpath)
+                    continue
 
-            #comparsion realization
+            #saving mtime and size of the destination file       
+            mtime_dest = os.path.getmtime(fulldstpath)
+            size_dest = os.path.getsize(fulldstpath)
+
+            #comparsion implementation
             if not no_compare:
                 try:
                     #print('Comparing ',fullsrcpath, ' -> ', fulldstpath)
-                    compare_result = filecmp.cmp(fullsrcpath, fulldstpath, shallow=compare_only_attr)
-                    if compare_result:
-                        files_identical.append(fullsrcpath)
-
+                    if (mtime_source==mtime_dest and size_source==size_dest):
+                        files_identical.append(fulldstpath)
                     else:
                         files_different.append(fulldstpath)
-                        print('Difference in file - ', fullsrcpath)
+                        print('Difference in file - ', fulldstpath)
                 except IOError as e:
                     print('Comparsion ',fullsrcpath, ' and ', fulldstpath, ' failed!', e.errno, e.strerror)
     except KeyboardInterrupt:
         print('\nOK. exit...')
         files_count("Statistics IN DESTINATION after INTERRUPT",dstfolder)
         #final_stat()
-        print('File copying before interrupt - ', files_to_be_copied[len(files_to_be_copied)-1] )
+        print('File copying before interrupt - ', file_copying )
         sys.exit()
 
 files_count("Statistics IN DESTINATION after backup",dstfolder)
 #final_stat()
 #log.close()
-   
