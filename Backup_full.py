@@ -7,7 +7,7 @@ import filecmp
 import time
 
 '''
-usage: "Backup_full.py backup_from_folder backup_to_folder".  Backup and compare each file byte-by-byte.
+usage: "Backup_full.py backup_from_folder backup_to_folder".  Backup and compare each file by attributes (getmtime and size).
        "Backup_full.py backup_from_folder backup_to_folder -n". Backup without compare backuped files.
 '''
 
