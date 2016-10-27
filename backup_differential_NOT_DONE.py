@@ -6,7 +6,7 @@ import filecmp
 
 path_collection = []
 backup_from = 'D:\\PY\\tb'
-backup_to = 'D:\\PY\\backup'
+backup_to = 'D:\\PY\\tb1'
 files_identical = 0
 files_different = 0
 
