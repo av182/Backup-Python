@@ -3,11 +3,10 @@ Cross-platform backup scripts. After copying each file - compares it with source
 
 Backup_full.py:
 
-usage: "Backup_full.py backup_from_folder backup_to_folder".  Backup and compare each file byte-by-byte.
-       "Backup_full.py backup_from_folder backup_to_folder -a". Backup and compare only attributes of each file .
+usage: "Backup_full.py backup_from_folder backup_to_folder".  Backup and compare each file by attributes (getmtime and size).
        "Backup_full.py backup_from_folder backup_to_folder -n". Backup without compare backuped files.
        
-Example: Backup_full.py "D:\backup_from" "\\server\backup_to"  -- creates folder like that "28012016-170514_full" and backup all the source tree into it. After copy of each file - byte-by-byte compares it with original file in the source directory.  
+Example: Backup_full.py "D:\backup_from" "\\server\backup_to"  -- creates folder like that "28012016-170514_full" and backup all the source tree into it. After copy of each file -  compares it with original file in the source directory.  
 
 Project is NOT DONE yet (under development)!
 
