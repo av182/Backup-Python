@@ -163,7 +163,7 @@ def time_format(tm):
 #####################################
 
 def find_prev_full_backup_folder():
-    """finding out the previous full_backup folder in the backup directory"""
+    #finding out the previous full_backup folder in the backup directory
     prev_backup_tree = os.listdir(path=backup_to)
     full_backup_tree = []
     for dirs in prev_backup_tree:
@@ -208,8 +208,8 @@ item_in_path_to_backup = len(backup_from.split(os.sep))
 ptree = os.walk(backup_from)
 
 print('Backup from: ',backup_from)
-print('Item in path to backup: ', item_in_path_to_backup)
-print('Copying files... See percents below... Progress is based on count(not size) of files and may sometimes freeze for a while.')
+print('Backup is running. Wait...')
+#print('Item in path to backup: ', item_in_path_to_backup)
 print('')
 
 for dirpath, dirnames, filenames in ptree:
@@ -277,8 +277,8 @@ for dirpath, dirnames, filenames in ptree:
                         new_name = rename_file(fl)
                         full_renamed_prev_path = os.path.join(prevpath,new_name)
                         if (not os.path.exists(full_renamed_prev_path)) or \
-                            (size_source != os.path.getsize(full_renamed_prev_path)) or \
-                            (mtime_source != os.path.getmtime(full_renamed_prev_path)):
+                            (size_source != os.path.getmtime(full_renamed_prev_path)) or \
+                            (mtime_source != os.path.getsize(full_renamed_prev_path)):
                             fulldstpath = os.path.join(dstpath, new_name)
                             
                             file_exist_warning(fulldstpath)
@@ -296,6 +296,8 @@ for dirpath, dirnames, filenames in ptree:
                                 files_copy_error.append(fullsrcpath)
                                 continue
                         else:
+                            #this needs if long name file dont need to be backed up, so it will not be in the dest dir
+                            #and so compare procedure fails
                             no_compare = True
                     else:
                         print('\nSkipping', fullsrcpath, e.errno, e.strerror)

@@ -179,7 +179,7 @@ def time_format(tm):
     return datetime.datetime.fromtimestamp(tm).strftime('%Y-%m-%d %H:%M:%S')
 
 #Statistics BEFORE backup
-files_count("Statistics in source BEFORE backup", backup_from)
+files_count("Getting statistics in source BEFORE backup...", backup_from)
 
 now_time = datetime.datetime.now().strftime('%d%m%Y-%H%M%S_full')
 dstfolder = os.path.join(backup_to, now_time)
@@ -187,8 +187,8 @@ os.mkdir(dstfolder)
 ptree = os.walk(backup_from)
 item_in_path_to_backup = len(backup_from.split(os.sep))
 print('Backup from: ',backup_from)
-print('Item in path to backup: ', item_in_path_to_backup)
-print('Copying files... See percents below... Progress is based on count(not size) of files and may sometimes freeze for a while.')
+#print('Item in path to backup: ', item_in_path_to_backup)
+print('Copying files... See percents below... Progress is based on count(not size) of the source files and may sometimes freeze for a while.')
 print('')
 for dirpath, dirnames, filenames in ptree:
     #i=i+1
